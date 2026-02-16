@@ -6,7 +6,25 @@ from pathlib import Path
 from typing import Optional
 import json
 
+from dotenv import load_dotenv
+
 from .core.scheduler import AgentScheduler
+
+
+def _load_env_file():
+    """从当前目录及父目录加载 .env 文件"""
+    path = Path.cwd()
+    for _ in range(5):  # 最多向上查找5层
+        env_file = path / ".env"
+        if env_file.exists():
+            load_dotenv(env_file)
+            break
+        parent = path.parent
+        if parent == path:
+            break
+        path = parent
+    else:
+        load_dotenv()  # 回退到默认行为（cwd）
 from .config.settings import Settings
 from .config.llm_config import LLMConfig
 from .utils.logger import get_logger
@@ -16,7 +34,7 @@ from .utils.logger import get_logger
 @click.version_option(version='0.1.0')
 def cli():
     """Infinity AI - 无限运行的AI Agent框架"""
-    pass
+    _load_env_file()
 
 
 @cli.command()
@@ -55,8 +73,13 @@ def init(project_root: str, requirements: str, config: Optional[str]):
         project_requirements
     )
 
-    scheduler.run_initialization()
-    logger.info("Project initialized successfully!")
+    # 执行初始化
+    success = scheduler._run_initialization()
+    if success:
+        logger.info("Project initialized successfully!")
+    else:
+        logger.error("Project initialization failed!")
+        raise SystemExit(1)
 
 
 @cli.command()
@@ -65,15 +88,17 @@ def init(project_root: str, requirements: str, config: Optional[str]):
               type=click.Choice(['continuous', 'single', 'interactive']),
               default='continuous',
               help='运行模式')
+@click.option('--requirements', '-r', help='项目需求描述文件路径（初始化时需要，默认尝试 requirements.txt）')
 @click.option('--config', '-c', help='配置文件路径')
-def run(project_root: str, mode: str, config: Optional[str]):
+def run(project_root: str, mode: str, requirements: Optional[str], config: Optional[str]):
     """运行AI Agent - 自动完成任务"""
 
     logger = get_logger("cli")
 
     # 加载配置
     settings = Settings.load(Path(config) if config else None)
-    settings.project_root = Path(project_root)
+    project_path = Path(project_root)
+    settings.project_root = project_path
 
     # 加载LLM配置
     llm_config = LLMConfig()
@@ -81,11 +106,31 @@ def run(project_root: str, mode: str, config: Optional[str]):
         logger.error("Invalid LLM configuration. Please set ANTHROPIC_API_KEY environment variable.")
         return
 
+    # 读取项目需求（初始化时需要）
+    project_requirements = None
+    if requirements:
+        req_path = Path(requirements)
+        if not req_path.is_absolute():
+            req_path = project_path / req_path
+        if req_path.exists():
+            with open(req_path, 'r', encoding='utf-8') as f:
+                project_requirements = f.read()
+        else:
+            logger.error(f"Requirements file not found: {req_path}")
+            raise SystemExit(1)
+    else:
+        # 未指定时，尝试从项目根目录读取 requirements.txt
+        default_req = project_path / "requirements.txt"
+        if default_req.exists():
+            with open(default_req, 'r', encoding='utf-8') as f:
+                project_requirements = f.read()
+
     # 运行调度器
     scheduler = AgentScheduler(
-        Path(project_root),
+        project_path,
         settings,
-        llm_config
+        llm_config,
+        project_requirements
     )
 
     scheduler.run(mode=mode)

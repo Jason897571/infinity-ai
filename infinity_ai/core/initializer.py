@@ -46,7 +46,10 @@ class InitializerAgent:
         self.feature_manager = FeatureManager(self.project_root / self.settings.feature_list_file)
 
         # 初始化Claude客户端
-        self.client = Anthropic(api_key=llm_config.api_key)
+        client_kwargs = {"api_key": llm_config.api_key}
+        if llm_config.api_base_url:
+            client_kwargs["base_url"] = llm_config.api_base_url
+        self.client = Anthropic(**client_kwargs)
         self.logger = get_logger("initializer")
 
         # 会话信息
@@ -155,6 +158,9 @@ Generate a comprehensive list of all features needed to complete this project.
 """
 
         try:
+            self.logger.info(f"Calling API with model: {self.llm_config.model}")
+            self.logger.debug(f"Prompt: {prompt[:200]}...")
+
             message = self.client.messages.create(
                 model=self.llm_config.model,
                 max_tokens=self.llm_config.max_tokens,
@@ -163,6 +169,8 @@ Generate a comprehensive list of all features needed to complete this project.
 
             # 提取JSON响应
             content = message.content[0].text
+            self.logger.info(f"API response received, length: {len(content)}")
+            self.logger.debug(f"Response content: {content[:500]}...")
 
             # 尝试解析JSON
             import json
@@ -172,14 +180,17 @@ Generate a comprehensive list of all features needed to complete this project.
             json_match = re.search(r'\[.*\]', content, re.DOTALL)
             if json_match:
                 features = json.loads(json_match.group())
-                self.logger.info(f"Generated {len(features)} features")
+                self.logger.info(f"Successfully parsed {len(features)} features from response")
                 return features
             else:
-                self.logger.error("No valid JSON found in response")
+                self.logger.error("No valid JSON array found in response")
+                self.logger.error(f"Full response: {content}")
                 return []
 
         except Exception as e:
-            self.logger.error(f"Failed to analyze requirements: {e}")
+            self.logger.error(f"Failed to analyze requirements: {type(e).__name__}: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             return []
 
     def _generate_init_script(self) -> str:

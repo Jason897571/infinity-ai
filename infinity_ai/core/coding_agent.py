@@ -50,7 +50,10 @@ class CodingAgent:
         )
 
         # 初始化Claude客户端
-        self.client = Anthropic(api_key=llm_config.api_key)
+        client_kwargs = {"api_key": llm_config.api_key}
+        if llm_config.api_base_url:
+            client_kwargs["base_url"] = llm_config.api_base_url
+        self.client = Anthropic(**client_kwargs)
         self.logger = get_logger("coding_agent")
 
         # 会话信息

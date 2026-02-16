@@ -18,8 +18,8 @@ class LLMConfig(BaseModel):
 
     # 模型配置
     model: str = Field(
-        default="claude-sonnet-4-5-20250929",
-        description="使用的Claude模型"
+        default="glm-5",
+        description=f"使用的glm模型"
     )
     max_tokens: int = Field(default=4096, description="最大token数")
     temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="温度参数")
@@ -37,9 +37,15 @@ class LLMConfig(BaseModel):
 
     @validator('api_key')
     def validate_api_key(cls, v):
-        """验证API key格式"""
-        if v and not v.startswith('sk-ant-'):
-            raise ValueError("Invalid Claude API key format")
+        """验证API key格式（宽松验证）"""
+        # 如果没有提供API key，允许None（后续会检查）
+        if v is None:
+            return v
+        # API key通常是字符串，做一些基本检查
+        if not isinstance(v, str):
+            raise ValueError("API key must be a string")
+        if len(v) < 10:
+            raise ValueError("API key seems too short")
         return v
 
     def is_valid(self) -> bool:
