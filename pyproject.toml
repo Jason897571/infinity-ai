@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infinity-ai"
+version = "0.1.0"
+description = "无限运行的AI Agent框架 - 基于Anthropic的Long-Running Agents设计"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Jason Gu", email = "jason@example.com"}
+]
+keywords = ["ai", "agent", "automation", "claude", "anthropic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+requires-python = ">=3.9"
+dependencies = [
+    "anthropic>=0.39.0",
+    "click>=8.1.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+infinity-ai = "infinity_ai.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/jasongu/infinity-ai"
+Documentation = "https://github.com/jasongu/infinity-ai#readme"
+Repository = "https://github.com/jasongu/infinity-ai.git"
+Issues = "https://github.com/jasongu/infinity-ai/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["infinity_ai*"]
+namespaces = false
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
