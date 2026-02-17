@@ -3,6 +3,25 @@
 
 set -e
 
+# 获取项目根目录
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# 激活虚拟环境
+if [ -d "$PROJECT_ROOT/venv" ]; then
+    echo "激活虚拟环境..."
+    source "$PROJECT_ROOT/venv/bin/activate"
+else
+    echo "警告: 虚拟环境不存在，使用系统Python"
+fi
+
+# 加载 .env 文件（如果存在）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    set -a
+    source "$SCRIPT_DIR/.env"
+    set +a
+fi
+
 echo "======================================"
 echo "Infinity AI - 演示脚本"
 echo "======================================"

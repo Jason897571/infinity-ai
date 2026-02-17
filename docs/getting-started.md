@@ -26,10 +26,28 @@ pip install -e .
 
 ## 第二步：配置API密钥
 
+### 方式一：环境变量
+
 ```bash
 # 设置环境变量
 export ANTHROPIC_API_KEY="sk-ant-your-key-here"
 ```
+
+### 方式二：.env 文件（推荐）
+
+在项目根目录或 `examples` 下创建 `.env` 文件：
+
+```bash
+# Anthropic 官方 API
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# 使用自定义代理时（如 OpenAI 兼容代理、GLM 等）
+ANTHROPIC_API_KEY=your-api-key
+BASE_URL=http://your-proxy-url
+API_AUTH_TYPE=bearer   # 使用 Authorization: Bearer 头（代理通常需要此格式）
+```
+
+> **认证方式说明：** 若代理返回 `invalid x-api-key` 错误，说明代理期望 `Authorization: Bearer` 格式，请在 `.env` 中添加 `API_AUTH_TYPE=bearer`。
 
 **获取API密钥：**
 1. 访问 https://console.anthropic.com/
@@ -106,7 +124,7 @@ python -m http.server 3000
 
 ```bash
 # 连续运行模式（推荐）
-infinity-ai run --mode continuous
+                                                                                                    infinity-ai run --mode continuous
 ```
 
 Agent会：

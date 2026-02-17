@@ -49,11 +49,8 @@ class CodingAgent:
             timeout=self.settings.test_timeout
         )
 
-        # 初始化Claude客户端
-        client_kwargs = {"api_key": llm_config.api_key}
-        if llm_config.api_base_url:
-            client_kwargs["base_url"] = llm_config.api_base_url
-        self.client = Anthropic(**client_kwargs)
+        # 初始化Claude客户端（支持 api_key 和 bearer 两种认证方式）
+        self.client = Anthropic(**llm_config.get_client_kwargs())
         self.logger = get_logger("coding_agent")
 
         # 会话信息

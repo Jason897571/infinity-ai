@@ -45,11 +45,8 @@ class InitializerAgent:
         self.progress_tracker = ProgressTracker(self.project_root / self.settings.progress_file)
         self.feature_manager = FeatureManager(self.project_root / self.settings.feature_list_file)
 
-        # 初始化Claude客户端
-        client_kwargs = {"api_key": llm_config.api_key}
-        if llm_config.api_base_url:
-            client_kwargs["base_url"] = llm_config.api_base_url
-        self.client = Anthropic(**client_kwargs)
+        # 初始化Claude客户端（支持 api_key 和 bearer 两种认证方式）
+        self.client = Anthropic(**llm_config.get_client_kwargs())
         self.logger = get_logger("initializer")
 
         # 会话信息
